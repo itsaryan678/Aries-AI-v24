@@ -1,98 +1,77 @@
 const axios = require('axios');
 
-let apiState = {
-    useBackupApi: false
+module.exports.config = {
+    name: "ar",
+    hasPermssion: 0,
+    version: "1.0.0",
+    credits: "Marjhxn",
+    description: "EDUCATIONAL",
+    usePrefix: true,
+    commandCategory: "AI",
+    usages: "[question]",
+    cooldowns: 5,
 };
 
-module.exports = {
-    name: "ar",
-    usedby: 0,
-    dmUser: false,
-    dev: "Marjhxn",
-    nickName: ["chatgpt", "gpt"],
-    info: "EDUCATIONAL",
-    onPrefix: false,
-    cooldowns: 6,
+module.exports.handleReply = async function ({ api, event, handleReply }) {
+    const { messageID, threadID } = event;
+    const id = event.senderID;
 
-    // Handle replies to previous messages
-    onReply: async function ({ reply, api, event }) {
-        const { threadID, senderID } = event;
-        const mainApiUrl = `https://jonellprojectccapisexplorer.onrender.com/api/gptconvo?ask=${encodeURIComponent(reply)}&id=${senderID}`;
-        const backupApiUrl = `https://gpt4o-hshs.onrender.com/gpt4o?ask=${encodeURIComponent(reply)}&id=${senderID}`;
-        const apiUrl = apiState.useBackupApi ? backupApiUrl : mainApiUrl;
+    const apiUrl = `https://jonellccprojectapis10.adaptable.app/api/gptconvo?ask=${encodeURIComponent(event.body)}&id=${id}`;
 
-        api.setMessageReaction("⏱️", event.messageID, () => {}, true);
+    try {
+        const lad = await api.sendMessage("🔎 Searching for an answer. Please wait...", threadID, messageID);
+        const response = await axios.get(apiUrl);
+        const { response: result } = response.data;
 
-        try {
-            const response = await axios.get(apiUrl);
-            const { response: followUpResult } = response.data;
+        const responseMessage = `𝗔𝗿𝗶𝗲𝘀 𝗔𝗜\n━━━━━━━━━━━━━━\n${result}\n━━━━━━━━━━━━━━\n`;
+        api.editMessage(responseMessage, lad.messageID, threadID, messageID);
+    } catch (error) {
+        console.error(error);
+        api.sendMessage("An error occurred while processing your request.", threadID, messageID);
+    }
+};
 
-            api.setMessageReaction("✅", event.messageID, () => {}, true);
-            api.sendMessage(`𝗖𝗛𝗔𝗧𝗚𝗣𝗧\n━━━━━━━━━━━━━━━━━━\n${followUpResult}\n━━━━━━━━━━━━━━━━━━`, threadID, event.messageID);
+module.exports.run = async function ({ api, event, args }) {
+    const { messageID, threadID } = event;
+    const id = event.senderID;
 
-            // Reset API state if backup was used
-            if (apiState.useBackupApi && apiUrl === backupApiUrl) {
-                apiState.useBackupApi = false;
-            }
-        } catch (error) {
-            console.error(error);
+    if (!args[0]) return api.sendMessage("Please provide your question.\n\nExample: ai what is the solar system?", threadID, messageID);
 
-            // If the main API fails, switch to backup
-            if (!apiState.useBackupApi) {
-                apiState.useBackupApi = true;
-                api.sendMessage("⚠️ Main API failed, switching to backup API.", threadID, event.messageID);
-                return this.onReply({ reply, api, event });
-            } else {
-                api.sendMessage("❌ Both main and backup APIs failed. Please try again later.", threadID, event.messageID);
-            }
-        }
-    },
+    const apiUrl = `https://jonellccprojectapis10.adaptable.app/api/gptconvo?ask=${encodeURIComponent(args.join(" "))}&id=${id}`;
 
-    // Launch function to initiate a conversation
-    onLaunch: async function ({ event, actions, target, api }) {
-        const { messageID, threadID } = event;
-        const id = event.senderID;
+    const lad = await api.sendMessage("🔎 Searching for an answer. Please wait...", threadID, messageID);
 
-        // Check if the user provided a question
-        if (!target[0]) {
-            return api.sendMessage("❓ Please provide your question.\n\nExample: ai what is the solar system?", threadID, messageID);
-        }
+    try {
+        if (event.type === "message_reply" && event.messageReply.attachments && event.messageReply.attachments[0]) {
+            const attachment = event.messageReply.attachments[0];
 
-        const ask = encodeURIComponent(target.join(" "));
-        const mainApiUrl = `https://jonellprojectccapisexplorer.onrender.com/api/gptconvo?ask=${ask}&id=${id}`;
-        const backupApiUrl = `https://gpt4o-hshs.onrender.com/gpt4o?ask=${ask}&id=${id}`;
-        const apiUrl = apiState.useBackupApi ? backupApiUrl : mainApiUrl;
+            if (attachment.type === "photo") {
+                const imageURL = attachment.url;
 
-        const lad = await actions.reply("🔎 Searching for an answer. Please wait...", threadID, messageID);
+                const geminiUrl = `https://joncll.serv00.net/chat.php?ask=${encodeURIComponent(args.join(" "))}&imgurl=${encodeURIComponent(imageURL)}`;
+                const response = await axios.get(geminiUrl);
+                const { vision } = response.data;
 
-        try {
-            const response = await axios.get(apiUrl);
-            const { response: result } = response.data;
-            const responseMessage = `𝗖𝗛𝗔𝗧𝗚𝗣𝗧\n━━━━━━━━━━━━━━━━━━\n${result}\n━━━━━━━━━━━━━━━━━━`;
-
-            api.editMessage(responseMessage, lad.messageID, threadID, messageID);
-
-            global.client.onReply.push({
-                name: this.name,
-                messageID: lad.messageID,
-                author: event.senderID,
-            });
-
-            // Reset API state if backup was used
-            if (apiState.useBackupApi && apiUrl === backupApiUrl) {
-                apiState.useBackupApi = false;
-            }
-        } catch (error) {
-            console.error(error);
-
-            // If the main API fails, switch to backup
-            if (!apiState.useBackupApi) {
-                apiState.useBackupApi = true;
-                api.editMessage(`⚠️ Main API failed, switching to backup API. Error: ${error.message}`, lad.messageID, threadID, messageID);
-                return this.onLaunch({ event, actions, target, api });
-            } else {
-                api.editMessage(`❌ Both main and backup APIs failed. Please try again later. Error: ${error.message}`, lad.messageID, threadID, messageID);
+                if (vision) {
+                    return api.editMessage(`𝗚𝗲𝗺𝗶𝗻𝗶 𝗩𝗶𝘀𝗶𝗼𝗻 𝗜𝗺𝗮𝗴𝗲 𝗥𝗲𝗰𝗼𝗴𝗻𝗶𝘁𝗶𝗼𝗻 \n━━━━━━━━━━━━━━━━━━\n${vision}\n━━━━━━━━━━━━━━━━━━\n`, lad.messageID, event.threadID, event.messageID);
+                } else {
+                    return api.sendMessage("🤖 Failed to recognize the image.", threadID, messageID);
+                }
             }
         }
+
+        const response = await axios.get(apiUrl);
+        const { response: result } = response.data;
+
+        const responseMessage = `𝗖𝗛𝗔𝗧𝗚𝗣𝗧\n━━━━━━━━━━━━━━━━━━\n${result}\n━━━━━━━━━━━━━━━━━━`;
+        api.editMessage(responseMessage, lad.messageID, event.threadID, event.messageID);
+        global.client.handleReply.push({
+            name: this.config.name,
+            messageID: lad.messageID,
+            author: event.senderID
+        });
+    } catch (error) {
+        console.error(error);
+        api.sendMessage("An error occurred while processing your request.", threadID, messageID);
     }
 };

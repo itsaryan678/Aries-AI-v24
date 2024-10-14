@@ -1,25 +1,25 @@
 {
-  "prefix": "!",
+  "prefix": "-",
   "adminUIDs": [
-   "your uid"
+   "100027867581039"
   ],
   "moderatorUIDs": [
-    "your uid",
+    "100027867581039",
     "",
     ""
   ],
-  "botName": "bot name",
-  "ownerName": "Your name",
-  "facebookLink": "fb link",
-  "resend": false,
+  "botName": "Aries AI",
+  "ownerName": "Marjhxn",
+  "facebookLink": "https://www.facebook.com/marjhxn",
+  "resend": true,
   "notilogs": true,
   "appstate": "./appstate.json",
   "restart": true,
   "restartTime": 50,
   "FCA": "hut-chat-api",
   "loginpanel": {
-    "user": "your username in dashboard",
-    "password": "password your dashboard",
-    "passcode": "12345"
+    "user": "marjhxn00",
+    "password": "aries,2400",
+    "passcode": "0118"
   }
 }
